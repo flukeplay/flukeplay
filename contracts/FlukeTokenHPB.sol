@@ -10,8 +10,7 @@ contract FlukeTokenHPB is FlukeToken{
     }
 
     function getSecureRandomNumberSeed() internal view returns(bytes32){
-        //return block.random;
-        revert("block.random not enabled");
+        return block.random;
     }
 
 }
