@@ -54,7 +54,7 @@ In addition, the contract allows anyone that feels generous to donate to the rew
 
 # Multichain ⇶
 
-Fluke Play contract is deployed on different chains to make it possible for different chains communities to play with their favourate coins. Naturally, for each supported coin there is a separate reward and treasury pools. This allows different communities to compete and demonstrate their unity and collective power. Community organizers may donate coins to the reward pool to incentivise player within their community.
+Fluke Play contract will be deployed on different chains to make it possible for different chains communities to play with their favourate coins. Naturally, for each supported coin there is a separate reward and treasury pools. This allows different communities to compete and demonstrate their unity and collective power. Community organizers may donate coins to the reward pool to incentivise players within their community.
 
 Don't see your favourate coin? Please file an issue in the issues section.
 
