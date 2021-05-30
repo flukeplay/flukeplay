@@ -94,6 +94,11 @@ interface IFlukeToken{
      */
     function getQueueSize() external view returns(uint64);
 
+    /*
+     * @dev Exchanges the provided FLK tokens for coins from treasury pool
+     */
+    function withdraw(uint256 tokensAmount) external;
+
     function pause() external;
     function unpause() external;
     /*
@@ -1078,8 +1083,8 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
         recipient.transfer(withdrawalCoins);
     }
 
-    function withdraw(address sender, uint256 amount) public {
-        _withdraw(sender, amount);
+    function withdraw(uint256 amount) public {
+        _withdraw(_msgSender(), amount);
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public whenNotPaused returns (bool) {
