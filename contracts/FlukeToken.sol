@@ -21,6 +21,7 @@ interface IFlukeToken{
      */
     event SettingsChanged(
                 address actor,
+                uint256 minimumPlayCoinsForBonus,
                 uint256 depositTreasuryContributionPerCoin, 
                 uint256 withdrawlFeePerFlk,
                 
@@ -34,8 +35,8 @@ interface IFlukeToken{
     /*
      * @dev Retrieve the minimumu amount of coins to play to qualify for full bonus.
      */
-    function getMinPlayCoinForBonus() external view returns(uint256);
-    function setMinPlayCoinForBonus(uint256 minPlayCoinForBonus) external;
+    function getMinPlayCoinsForBonus() external view returns(uint256);
+    function setMinPlayCoinsForBonus(uint256 minPlayCoinsForBonus) external;
     /*
      * @dev Amount of coins in wei to be transfered from reward pool to treasury pool for each coin played.
      */
@@ -644,7 +645,7 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
     uint256 private constant MAXIMUM_WITHDRAWAL_FEE_PER_FLK = 2*10**17;//20%
 
     uint64 internal _submissionIndex;
-    uint256 internal _minPlayCoinForBonus;
+    uint256 internal _minPlayCoinsForBonus;
     uint256 internal _depositTreasuryContributionPerCoin;
     uint256 internal _withdrawalFeePerToken;
     uint256 internal _treasuryPoolBalance;
@@ -658,7 +659,7 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
         _depositTreasuryContributionPerCoin = 10**17; //10%
         _withdrawalFeePerToken = 10**17; //10%
         _submissionIndex = 0;
-        _minPlayCoinForBonus = FLK_UNIT;
+        _minPlayCoinsForBonus = FLK_UNIT;
     }
 
     function getSubmissionsCount() public view returns(uint64){
@@ -666,7 +667,9 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
     }
 
     function emitSettingsChanged() internal{        
-        emit SettingsChanged(_msgSender(), _depositTreasuryContributionPerCoin, 
+        emit SettingsChanged(_msgSender(), 
+                    _minPlayCoinsForBonus,
+                    _depositTreasuryContributionPerCoin, 
                     _withdrawalFeePerToken,
 
                     _decisionDelayBlocksCount,
@@ -674,11 +677,13 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
                     );
     }
 
-    function getMinPlayCoinForBonus() public view returns(uint256){
-        return _minPlayCoinForBonus;
+    function getMinPlayCoinsForBonus() public view returns(uint256){
+        return _minPlayCoinsForBonus;
     }
-    function setMinPlayCoinForBonus(uint256 minPlayCoinForBonus) public onlyOwner{
-        _minPlayCoinForBonus = minPlayCoinForBonus;
+    function setMinPlayCoinsForBonus(uint256 minPlayCoinsForBonus) public onlyOwner{
+        _minPlayCoinsForBonus = minPlayCoinsForBonus;
+
+        emitSettingsChanged();
     }
     function getDepositTreasuryContributionPerCoin() public view returns(uint256){
         return _depositTreasuryContributionPerCoin;
@@ -768,10 +773,10 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
     function getFullBonusThreshold() internal view returns(uint256){
         uint256 fullBonusThreshold;
         if(_submissionIndex==0 || address(this).balance==0){
-            fullBonusThreshold = _minPlayCoinForBonus;
+            fullBonusThreshold = _minPlayCoinsForBonus;
         }else{
             uint256 averageSubmittedAmount = address(this).balance.div(_submissionIndex+1);
-            fullBonusThreshold = averageSubmittedAmount.add(_minPlayCoinForBonus).div(2);
+            fullBonusThreshold = averageSubmittedAmount.add(_minPlayCoinsForBonus).div(2);
         }
         return fullBonusThreshold;
     }
@@ -783,7 +788,7 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
             bonus = bonus.mul(playedCoins).div(fullBonusThreshold);
         }
         
-        //1. issue FLKs to sender and contract (1 FLK for each HPB + bonus)
+        //1. issue FLKs to sender and contract (1 FLK for each coin + bonus)
         uint256 submissionTokens = playedCoins.mul(tokenRewardsPerPlayedCoin()).div(FLK_UNIT)
                 .add(bonus);
         
@@ -801,7 +806,7 @@ contract FlukeToken is IFlukeToken, Ownable, FlukeTickets, FlukeTokenDonatable, 
         //2. Give reward if any
         
         if(rewardMultiplier>0){
-            //give user FLK tokens equivailent to rewardMultiplier X the HPB they sent
+            //give user FLK tokens equivailent to rewardMultiplier X the coins they sent
             
             (prizeMultiplier, targetPrize, awardedCoins, awardedTokens) = 
                 awardPlayer(sender, playedValue * rewardMultiplier, rewardMultiplier);
